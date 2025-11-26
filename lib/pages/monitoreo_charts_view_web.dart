@@ -157,7 +157,8 @@ class MonitoreoChartsView extends StatelessWidget {
     }
 
     final chartScript = html.ScriptElement()
-      ..src = 'https://cdn.jsdelivr.net/npm/chart.js'
+      ..src =
+          'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js'
       ..defer = true;
 
     chartScript.onError.listen((_) {
