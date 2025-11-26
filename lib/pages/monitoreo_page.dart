@@ -93,7 +93,7 @@ class MonitoreoPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const MonitoreoChartsView(),
+                  MonitoreoChartsView(),
                   if (!kIsWeb) ...[
                     const SizedBox(height: 12),
                     Text(
