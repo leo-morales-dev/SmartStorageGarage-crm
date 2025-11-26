@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import 'monitoreo_charts_view.dart';
 
 class MonitoreoPage extends StatelessWidget {
   const MonitoreoPage({super.key});
@@ -75,19 +78,30 @@ class MonitoreoPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Panel de monitoreo en construcción',
+                    'Monitoreo en tiempo real',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Pronto podrás ver aquí alertas, cámaras y métricas en vivo.',
+                    'Visualiza las lecturas de distancia, temperatura y humedad '
+                    'provenientes de tus sensores ESP32.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.textTheme.bodyMedium?.color
                           ?.withOpacity(isDark ? 0.8 : 0.7),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  MonitoreoChartsView(),
+                  if (!kIsWeb) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Consejo: abre el CRM desde un navegador web para activar '
+                      'las gráficas conectadas a Firebase Realtime Database.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ],
               ),
             ),
