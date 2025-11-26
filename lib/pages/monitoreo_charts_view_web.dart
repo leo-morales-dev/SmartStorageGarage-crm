@@ -32,29 +32,106 @@ class MonitoreoChartsView extends StatelessWidget {
       final content = html.DivElement()
         ..id = containerId
         ..setInnerHtml('''
+          <style>
+            :root {
+              --card-bg: #ffffff;
+              --card-border: rgba(0, 0, 0, 0.06);
+              --text-main: #0f172a;
+              --text-subtle: rgba(15, 23, 42, 0.72);
+              --divider: rgba(15, 23, 42, 0.08);
+            }
+
+            @media (prefers-color-scheme: dark) {
+              :root {
+                --card-bg: rgba(255, 255, 255, 0.04);
+                --card-border: rgba(255, 255, 255, 0.08);
+                --text-main: #e2e8f0;
+                --text-subtle: rgba(226, 232, 240, 0.72);
+                --divider: rgba(226, 232, 240, 0.08);
+              }
+            }
+
+            .page {
+              font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+                'Segoe UI', sans-serif;
+              color: var(--text-main);
+            }
+
+            .page h1 {
+              margin: 0 0 4px;
+              font-size: 22px;
+              font-weight: 700;
+            }
+
+            .page p {
+              margin: 0 0 16px;
+              color: var(--text-subtle);
+              font-size: 14px;
+            }
+
+            .chart-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+              gap: 16px;
+            }
+
+            .chart-card {
+              background: var(--card-bg);
+              border: 1px solid var(--card-border);
+              border-radius: 16px;
+              padding: 16px;
+              box-sizing: border-box;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            }
+
+            .chart-card h2 {
+              margin: 0 0 12px;
+              font-size: 16px;
+              font-weight: 600;
+              color: var(--text-main);
+            }
+
+            canvas {
+              width: 100% !important;
+              height: 240px !important;
+            }
+
+            .status {
+              margin-top: 10px;
+              color: var(--text-subtle);
+              font-size: 12px;
+              border-top: 1px solid var(--divider);
+              padding-top: 8px;
+            }
+          </style>
           <div class="page">
             <h1>Monitoreo en Tiempo Real</h1>
             <p>Datos enviados desde los sensores físicos (ESP32).</p>
 
-            <section>
-              <h2>Distancia (cm)</h2>
-              <canvas id="$distId"></canvas>
-            </section>
+            <div class="chart-grid">
+              <section class="chart-card">
+                <h2>Distancia (cm)</h2>
+                <canvas id="$distId"></canvas>
+              </section>
 
-            <section>
-              <h2>Temperatura (°C)</h2>
-              <canvas id="$tempId"></canvas>
-            </section>
+              <section class="chart-card">
+                <h2>Temperatura (°C)</h2>
+                <canvas id="$tempId"></canvas>
+              </section>
 
-            <section>
-              <h2>Humedad (%)</h2>
-              <canvas id="$humId"></canvas>
-            </section>
+              <section class="chart-card">
+                <h2>Humedad (%)</h2>
+                <canvas id="$humId"></canvas>
+              </section>
+            </div>
+
+            <div class="status" id="status-$distId"></div>
           </div>
         ''',
             validator: html.NodeValidatorBuilder.common()
               ..allowElement('section')
               ..allowElement('canvas', attributes: ['id'])
+              ..allowElement('style')
               ..allowElement('h1')
               ..allowElement('h2')
               ..allowElement('p'));
@@ -80,6 +157,10 @@ class MonitoreoChartsView extends StatelessWidget {
           (function() {
             if (typeof db === 'undefined') {
               console.warn('Firebase database instance (db) no encontrada.');
+              const statusEl = document.getElementById('status-$distId');
+              if (statusEl) {
+                statusEl.textContent = 'No se encontró la instancia de Firebase. Verifica la configuración en web/index.html';
+              }
               return;
             }
 
@@ -92,6 +173,16 @@ class MonitoreoChartsView extends StatelessWidget {
             const temp2Data = [];
             const hum1Data = [];
             const hum2Data = [];
+
+            const statusEl = document.getElementById('status-$distId');
+            if (statusEl) statusEl.textContent = 'Conectado a Firebase. Esperando lecturas...';
+
+            const trimData = (arr) => {
+              const maxPoints = 24;
+              if (arr.length > maxPoints) {
+                arr.splice(0, arr.length - maxPoints);
+              }
+            };
 
             const distChart = new Chart(document.getElementById('$distId'), {
               type: 'line',
@@ -133,6 +224,8 @@ class MonitoreoChartsView extends StatelessWidget {
               const now = new Date().toLocaleTimeString();
               labels.push(now);
 
+              trimData(labels);
+
               dist1Data.push(data.bodega1?.dist ?? 0);
               temp1Data.push(data.bodega1?.temp ?? 0);
               hum1Data.push(data.bodega1?.hum ?? 0);
@@ -141,9 +234,20 @@ class MonitoreoChartsView extends StatelessWidget {
               temp2Data.push(data.bodega2?.temp ?? 0);
               hum2Data.push(data.bodega2?.hum ?? 0);
 
+              trimData(dist1Data);
+              trimData(temp1Data);
+              trimData(hum1Data);
+              trimData(dist2Data);
+              trimData(temp2Data);
+              trimData(hum2Data);
+
               distChart.update();
               tempChart.update();
               humChart.update();
+
+              if (statusEl) {
+                statusEl.textContent = `Última actualización: ${now}`;
+              }
             });
           })();
         ''';
@@ -157,7 +261,8 @@ class MonitoreoChartsView extends StatelessWidget {
     }
 
     final chartScript = html.ScriptElement()
-      ..src = 'https://cdn.jsdelivr.net/npm/chart.js'
+      ..src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
+      ..crossOrigin = 'anonymous'
       ..defer = true;
 
     chartScript.onError.listen((_) {
