@@ -8,6 +8,7 @@ import 'pages/dashboard_page.dart';
 import 'pages/clients_page.dart';
 import 'pages/containers_page.dart';
 import 'pages/graficas_page.dart'; // 👈 NUEVA
+import 'pages/monitoreo_page.dart';
 
 // Páginas de auth
 import 'pages/login_page.dart';
@@ -123,6 +124,7 @@ class _DashboardShellState extends State<DashboardShell> {
     ClientsPage(),
     ContainersPage(),
     GraficasPage(), // 👈 NUEVA PÁGINA
+    MonitoreoPage(),
   ];
 
   Future<void> _logout() async {
@@ -287,6 +289,11 @@ class _DashboardShellState extends State<DashboardShell> {
                   icon: Icon(Icons.bar_chart_outlined),
                   selectedIcon: Icon(Icons.bar_chart),
                   label: Text('Gráficas'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.monitor_heart_outlined),
+                  selectedIcon: Icon(Icons.monitor_heart),
+                  label: Text('Monitoreo'),
                 ),
               ],
 
